@@ -2,10 +2,20 @@
 
 ## 1. System Design
 
+--Add and edit tasks 
+--Generate and view daily schedule 
+--Enter owner and pet info
+
 **a. Initial design**
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+
+-- Classes: pet, owner, task, schedule
+-- Pet: name, age, what animal, what breed
+-- Owner: name, age, pets list
+-- task: what task, when to do, repeat?, how long does it take
+-- schedule: list of tasks in the schedule
 
 **b. Design changes**
 
