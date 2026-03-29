@@ -35,12 +35,16 @@
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+-- The scheduler considers time, completion, recurring tasks, and also conflicts.
+
+-- Time is very importnat because daily schedule depends on it. Completion avoides repeated tasks. Recurrence is for routines. And conflicts helps imporve reliability.
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
----
+-- The scheduler first fills as many high priority tasks as possible. It uses simple planning which has a quick generation time. Howveer. It can skip lower priority tasks and optimal arrangement of tasks. It may skip over tasks that would fit if the tasks were rescheduled after future entries or used a non greedy scheduling apporach. This is a reasonable trade off because priority is more important than perdect schedule. Advanced rescheduling is harder to verify. And fir this scale of app that has less than 10 tasks per day, this is a reasonable tradeoff.
 
 ## 3. AI Collaboration
 

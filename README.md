@@ -22,6 +22,15 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Smarter Scheduling
+
+PawPal+ now supports:
+
+- time-based ordering (`scheduled_start`) and duration-aware sorting
+- filtering by pet name and completion status
+- recurring task rules (`daily`, `weekly`, `monthly`) with auto-rescheduling on completion
+- conflict detection for overlapping tasks and warnings in plan output
+
 ## Getting started
 
 ### Setup
