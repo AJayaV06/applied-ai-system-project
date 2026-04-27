@@ -26,7 +26,7 @@
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
 
--- Yes, I made a few changes. One major change I made was having a relationship between a task and a pet. Intially, there was no relationship but when mentioned by Copilot I relaized that this is a important relationship. If a owner has multiple pets and a task is "feed pet", it might be hard to identify the specific pet. So having a relationship between the 2 classes would help specify the tasks for specific pets.
+-- Yes, I made a few changes. One major change I made was having a relationship between a task and a pet. Intially, there was no relationship but when mentioned by Copilot I realized that this is a important relationship. If a owner has multiple pets and a task is "feed pet", it might be hard to identify the specific pet. So having a relationship between the 2 classes would help specify the tasks for specific pets.
 
 ## 2. Scheduling Logic and Tradeoffs
 

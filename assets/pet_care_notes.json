@@ -1,0 +1,59 @@
+[
+  {
+    "id": "dog_walk_timing",
+    "species": "dog",
+    "categories": ["walk", "feed"],
+    "requires": ["feed"],
+    "min_age": 0,
+    "max_age": 25,
+    "guidance": "For many dogs, a walk before feeding can support routine and reduce intense activity right after a meal."
+  },
+  {
+    "id": "medication_priority",
+    "species": "any",
+    "categories": ["meds"],
+    "min_age": 0,
+    "max_age": 25,
+    "guidance": "Medication tasks should be prioritized and kept on a consistent schedule to reduce missed doses."
+  },
+  {
+    "id": "grooming_frequency",
+    "species": "any",
+    "categories": ["grooming"],
+    "min_age": 0,
+    "max_age": 25,
+    "guidance": "Regular short grooming sessions are often easier to maintain than infrequent long sessions."
+  },
+  {
+    "id": "dog_puppy_enrichment",
+    "species": "dog",
+    "categories": ["enrichment", "walk"],
+    "min_age": 0,
+    "max_age": 2,
+    "guidance": "Puppies benefit from short, frequent enrichment and movement sessions with rest between activities."
+  },
+  {
+    "id": "senior_pet_routine",
+    "species": "any",
+    "categories": ["walk", "enrichment", "grooming"],
+    "min_age": 8,
+    "max_age": 30,
+    "guidance": "Senior pets generally benefit from predictable routines, lower impact activity, and close observation."
+  },
+  {
+    "id": "cat_evening_enrichment",
+    "species": "cat",
+    "categories": ["enrichment", "feed"],
+    "min_age": 0,
+    "max_age": 25,
+    "guidance": "Many cats respond well to evening play and puzzle feeding to support mental stimulation."
+  },
+  {
+    "id": "daily_feeding_consistency",
+    "species": "any",
+    "categories": ["feed"],
+    "min_age": 0,
+    "max_age": 25,
+    "guidance": "Consistent feeding times can help appetite regulation and make changes in eating behavior easier to spot."
+  }
+]

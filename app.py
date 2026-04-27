@@ -1,5 +1,27 @@
+import logging
 import streamlit as st
-from pawpal_system import Owner, Pet, Task, TaskCategory, Scheduler
+from datetime import date, datetime
+from pawpal_system import Owner, Pet, Task, TaskCategory, Scheduler, run_system_health_check
+
+logging.basicConfig(
+    filename="pawpal.log",
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+
+def display_time(raw_time) -> str:
+    if raw_time is None:
+        return "TBD"
+    if hasattr(raw_time, "strftime"):
+        return raw_time.strftime("%H:%M")
+    if isinstance(raw_time, str):
+        try:
+            return datetime.strptime(raw_time, "%H:%M").strftime("%H:%M")
+        except ValueError:
+            return "TBD"
+    return "TBD"
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -26,15 +48,38 @@ with st.sidebar.expander("Edit Owner Info", expanded=False):
     new_owner_age = st.number_input("Owner age", min_value=0, max_value=120, value=owner.age)
     new_available_start = st.time_input("Available start", value=owner.available_start)
     new_available_end = st.time_input("Available end", value=owner.available_end)
+    use_split_windows = st.checkbox("Use morning + evening windows", value=bool(owner.availability_windows))
+
+    morning_start = st.time_input("Morning start", value=owner.available_start)
+    morning_end = st.time_input("Morning end", value=owner.available_start.replace(hour=min(owner.available_start.hour + 2, 23)))
+    evening_start = st.time_input("Evening start", value=owner.available_end.replace(hour=max(owner.available_end.hour - 2, 0)))
+    evening_end = st.time_input("Evening end", value=owner.available_end)
 
     if st.button("Save owner info", key="save_owner_info"):
         owner.name = new_owner_name.strip() or owner.name
         owner.age = new_owner_age
-        owner.available_start = new_available_start
-        owner.available_end = new_available_end
-        st.sidebar.success("Owner info and availability updated")
-        # Keep owner in session state updated
-        st.session_state.owner = owner
+        saved = True
+        if use_split_windows:
+            try:
+                owner.set_availability_windows([
+                    (morning_start, morning_end),
+                    (evening_start, evening_end),
+                ])
+            except ValueError as e:
+                st.sidebar.error(str(e))
+                saved = False
+        else:
+            try:
+                owner.set_availability(new_available_start, new_available_end)
+                owner.availability_windows = []
+            except ValueError as e:
+                st.sidebar.error(str(e))
+                saved = False
+
+        if saved:
+            st.sidebar.success("Owner info and availability updated")
+            # Keep owner in session state updated
+            st.session_state.owner = owner
 
 # Pet creation form
 with st.form(key="add_pet_form"):
@@ -70,6 +115,8 @@ with st.form(key="add_task_form"):
     task_duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=15)
     task_priority = st.selectbox("Priority", [1, 2, 3, 4, 5], index=3)
     task_category = st.selectbox("Category", list(TaskCategory))
+    has_fixed_start = st.checkbox("Set fixed start time", value=False)
+    task_fixed_start = st.time_input("Fixed start time", value=owner.available_start)
     task_repeat = st.selectbox("Repeat rule", ["", "daily", "weekly", "weekdays", "weekends"])
     task_submitted = st.form_submit_button("Add Task")
 
@@ -90,6 +137,8 @@ with st.form(key="add_task_form"):
                 pet_name=selected_pet_name,
                 repeat_rule=task_repeat.strip() if task_repeat else None,
                 due_date=date.today() if task_repeat else None,
+                scheduled_start=task_fixed_start if has_fixed_start else None,
+                flexible=not has_fixed_start,
             )
             pet = owner.get_pet(selected_pet_name)
             if pet is not None:
@@ -139,15 +188,30 @@ else:
 
 st.divider()
 
+st.subheader("System Health")
+if st.button("Run system health check"):
+    health = run_system_health_check()
+    if health["failed"] == 0:
+        st.success(health["health_text"])
+    else:
+        st.warning(health["health_text"])
+
+    st.write(f"Status: {health['status']}")
+    for result in health["results"]:
+        icon = "✅" if result["passed"] else "⚠️"
+        st.write(f"{icon} {result['name']}: {result['details']}")
+
+st.divider()
+
 st.subheader("Build Schedule")
-from datetime import date
 
 selected_date = st.session_state.get("selected_date") or st.date_input("Date", value=date.today())
 st.session_state.selected_date = selected_date
 
 if st.button("Generate schedule"):
     scheduler = Scheduler(owner=owner, date=selected_date)
-    schedule = scheduler.generate_daily_plan()
+    agentic_result = scheduler.generate_agentic_plan()
+    schedule = agentic_result["final_plan"]
     scheduler.sort_tasks_by_time()
 
     if schedule:
@@ -157,7 +221,7 @@ if st.button("Generate schedule"):
         for t in scheduler.planned_tasks:
             task_rows.append(
                 {
-                    "Time": t.scheduled_start.strftime("%H:%M") if t.scheduled_start else "TBD",
+                    "Time": display_time(t.scheduled_start),
                     "End": t.get_end_time().strftime("%H:%M") if t.get_end_time() else "TBD",
                     "Task": t.title,
                     "Pet": t.pet_name,
@@ -178,8 +242,23 @@ if st.button("Generate schedule"):
         else:
             st.success("No conflicts detected.")
 
+        if scheduler.unscheduled_tasks:
+            st.warning("Some tasks could not be scheduled inside your availability windows:")
+            for task in scheduler.unscheduled_tasks:
+                st.warning(f"{task.title} ({task.pet_name}) - {task.duration_minutes} minutes")
+
+        if agentic_result.get("rag_warnings"):
+            st.info("RAG-driven adjustments (from pet_care_notes.json):")
+            for w in agentic_result["rag_warnings"]:
+                st.info(w)
+
         st.markdown("### Plan explanation")
+        st.markdown("#### Agentic workflow steps")
+        for step in agentic_result["steps"]:
+            st.write(f"- {step}")
         st.text(scheduler.explain_plan())
+        st.markdown("### Daily summary")
+        st.info(scheduler.summarize_plan_simple())
     else:
         st.warning("No tasks could be scheduled (check available hours / task duration)")
 

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python demo.py)",
+      "Bash(python -m pytest tests/test_pawpal.py -q)"
+    ]
+  }
+}
